@@ -1,3 +1,5 @@
+name: element
+
 services:
   element:
     image: vectorim/element-web:latest

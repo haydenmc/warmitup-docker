@@ -1,3 +1,5 @@
+name: synapse
+
 networks:
   default:
     name: synapse_internal
