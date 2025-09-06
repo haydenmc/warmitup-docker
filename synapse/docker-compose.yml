@@ -1,0 +1,70 @@
+networks:
+  default:
+    name: synapse_internal
+  proxy:
+    external: true
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    networks: [default]
+    environment:
+      POSTGRES_DB: synapse
+      POSTGRES_USER: synapse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse -d synapse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  synapse:
+    image: matrixdotorg/synapse:v1.137.0
+    restart: unless-stopped
+    depends_on: [db]
+    networks: [default, proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.syn.rule=Host(`warmitup.chat`) && PathRegexp(`/(.+)`)
+      - traefik.http.routers.syn.entrypoints=websecure
+      - traefik.http.routers.syn.tls.certresolver=le
+      - traefik.http.routers.syn.priority=1
+      - traefik.http.services.syn.loadbalancer.server.port=8008
+      # (Optional) increase timeouts for media/federation
+      - traefik.http.routers.syn.middlewares=syn-timeouts
+      - traefik.http.middlewares.syn-timeouts.headers.customresponseheaders.X-Accel-Buffering=no
+    environment:
+      SYNAPSE_SERVER_NAME: warmitup.chat
+      SYNAPSE_REPORT_STATS: yes
+    volumes:
+      - synapse-config:/data
+      - synapse-media:/data/media_store
+    ports:
+      - "127.0.0.1:8008:8008"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8008/_matrix/client/versions"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Tiny static server for .well-known files
+  wellknown:
+    image: nginx:alpine
+    restart: unless-stopped
+    networks: [proxy]
+    volumes:
+      - ./well-known:/usr/share/nginx/html/.well-known:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wk.rule=Host(`warmitup.chat`) && PathPrefix(`/.well-known/matrix`)
+      - traefik.http.routers.wk.entrypoints=websecure
+      - traefik.http.routers.wk.tls.certresolver=le
+      - traefik.http.services.wk.loadbalancer.server.port=80
+
+volumes:
+  pg-data:
+  synapse-config:
+  synapse-media:

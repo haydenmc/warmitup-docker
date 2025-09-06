@@ -1,0 +1,44 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3.5.1
+    networks: [proxy]
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # Redirect HTTP → HTTPS
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      # ACME (Let's Encrypt)
+      - --certificatesresolvers.le.acme.email=${TRAEFIK_ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/acme/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      # Optional: dashboard on :8080 (protect it if you enable)
+      #- --api.insecure=true
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.root-redirect.rule=Host(`warmitup.chat`) && Path(`/`)
+      - traefik.http.routers.root-redirect.entrypoints=websecure
+      - traefik.http.routers.root-redirect.tls=true
+      - traefik.http.routers.root-redirect.tls.certresolver=le
+      - traefik.http.routers.root-redirect.middlewares=root-to-element
+      - traefik.http.middlewares.root-to-element.redirectregex.regex=^.*$
+      - traefik.http.middlewares.root-to-element.redirectregex.replacement=https://element.warmitup.chat/
+      - traefik.http.middlewares.root-to-element.redirectregex.permanent=true
+
+    ports:
+      - 80:80
+      - 443:443
+        #- 8080:8080  # dashboard (optional)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/acme
+
+volumes:
+  traefik-acme:
