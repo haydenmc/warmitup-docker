@@ -1,0 +1,48 @@
+volumes:
+  traefik-acme:
+    external: true
+    name: proxy_traefik-acme
+  mumble-certs:
+  mumble-data:
+
+services:
+  # Dumps certs from Traefik's acme.json to PEM files and keeps them updated
+  certs-dumper:
+    image: ldez/traefik-certs-dumper:v2.10
+    restart: unless-stopped
+    command:
+      - file
+      - --watch
+      - --source=/acme/acme.json
+      - --dest=/dump
+      - --domain-subdir
+      - --version=v3
+      - --post-hook
+      - "chown -R 10000:10000 /dump"
+    volumes:
+      - traefik-acme:/acme:ro
+      - mumble-certs:/dump
+
+  # Mumble server
+  mumble:
+    image: mumblevoip/mumble-server:latest
+    depends_on: [certs-dumper]
+    restart: unless-stopped
+    ports:
+      - 64738:64738
+      - 64738:64738/udp
+    volumes:
+      - mumble-certs:/certs:ro
+      - mumble-data:/data
+    environment:
+      MUMBLE_CONFIG_allowhtml: true
+      MUMBLE_CONFIG_allowping: true
+      MUMBLE_CONFIG_messageburst: 5
+      MUMBLE_CONFIG_messagelimit: 1
+      MUMBLE_CONFIG_users: 100
+      MUMBLE_CONFIG_bandwidth: 128000
+      MUMBLE_CONFIG_serverpassword: ${MUMBLE_PASSWORD}
+      MUMBLE_CONFIG_sslCert: /certs/warmitup.chat/certificate.crt
+      MUMBLE_CONFIG_sslKey: /certs/warmitup.chat/privatekey.key
+      MUMBLE_CONFIG_welcometext: |
+        "<pre><br /> __      ___   ___ __  __ ___ _____ _   _ ___ <br /> \\ \\    / /_\\ | _ \\  \\/  |_ _|_   _| | | | _ \\<br />  \\ \\/\\/ / _ \\|   / |\\/| || |  | | | |_| |  _/<br />   \\_/\\_/_/ \\_\\_|_\\_|  |_|___| |_|  \\___/|_|  <br />                                              <br /></pre>"

@@ -1,3 +1,5 @@
+name: proxy
+
 networks:
   proxy:
     external: true
