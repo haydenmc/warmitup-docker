@@ -1,0 +1,26 @@
+name: tv
+
+networks:
+  proxy:
+    external: true
+
+services:
+  tv:
+    # Need to build this image yourself
+    # https://github.com/haydenmc/EzStream
+    image: ezstream:latest
+    restart: unless-stopped
+    networks: [proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tv.rule=Host(`warmitup.tv`)
+      - traefik.http.routers.tv.entrypoints=websecure
+      - traefik.http.routers.tv.tls.certresolver=le
+      - traefik.http.services.tv.loadbalancer.server.port=8080
+    volumes:
+      - ./data:/data
+    ports:
+      - 20000-21000:20000-21000/udp
+    command:
+      - --channelsJsonFile
+      - /data/channels.json

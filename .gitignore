@@ -4,3 +4,6 @@
 # Volumes
 synapse/config
 synapse/media
+
+# Configuration
+tv/data
