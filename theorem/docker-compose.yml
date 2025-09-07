@@ -1,0 +1,10 @@
+name: theorem
+
+services:
+  theorem:
+    # Need to build this image yourself
+    # https://github.com/haydenmc/TheoremChatBot
+    image: theorem-chat-bot:latest
+    restart: unless-stopped
+    env_file:
+      - .env
