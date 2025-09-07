@@ -30,14 +30,15 @@ services:
     networks: [default, proxy]
     labels:
       - traefik.enable=true
+      - traefik.docker.network=proxy
       - traefik.http.routers.syn.rule=Host(`warmitup.chat`) && PathRegexp(`/(.+)`)
       - traefik.http.routers.syn.entrypoints=websecure
       - traefik.http.routers.syn.tls.certresolver=le
       - traefik.http.routers.syn.priority=1
       - traefik.http.services.syn.loadbalancer.server.port=8008
       # (Optional) increase timeouts for media/federation
-      - traefik.http.routers.syn.middlewares=syn-timeouts
-      - traefik.http.middlewares.syn-timeouts.headers.customresponseheaders.X-Accel-Buffering=no
+      #- traefik.http.routers.syn.middlewares=syn-timeouts
+      #- traefik.http.middlewares.syn-timeouts.headers.customresponseheaders.X-Accel-Buffering=no
     environment:
       SYNAPSE_SERVER_NAME: warmitup.chat
       SYNAPSE_REPORT_STATS: yes
