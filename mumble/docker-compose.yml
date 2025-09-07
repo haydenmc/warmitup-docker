@@ -37,6 +37,7 @@ services:
       - mumble-certs:/certs:ro
       - mumble-data:/data
     environment:
+      MUMBLE_SUPERUSER_PASSWORD: ${MUMBLE_SUPERUSER_PASSWORD}
       MUMBLE_CONFIG_allowhtml: true
       MUMBLE_CONFIG_allowping: true
       MUMBLE_CONFIG_messageburst: 5
