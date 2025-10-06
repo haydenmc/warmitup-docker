@@ -1,6 +1,6 @@
 {
   "default_server_config": {
-    "m.homeserver": { "base_url": "https://element.warmitup.chat", "server_name": "warmitup.chat" }
+    "m.homeserver": { "base_url": "https://warmitup.chat", "server_name": "warmitup.chat" }
   },
   "brand": "WarmItUp",
   "show_labs_settings": true
