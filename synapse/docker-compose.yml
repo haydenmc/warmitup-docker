@@ -24,7 +24,7 @@ services:
       retries: 10
 
   synapse:
-    image: matrixdotorg/synapse:v1.137.0
+    image: matrixdotorg/synapse:v1.139.2
     restart: unless-stopped
     depends_on: [db]
     networks: [default, proxy]
