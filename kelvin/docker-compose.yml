@@ -1,0 +1,10 @@
+name: kelvin
+services:
+  kelvinbot:
+    image: ghcr.io/haydenmc/kelvin-bot:v0.0.2
+    env_file: .env
+    volumes:
+      - kelvin-data:/data
+    restart: unless-stopped
+volumes:
+  kelvin-data:
